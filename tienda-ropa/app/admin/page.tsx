@@ -59,12 +59,47 @@ export default function AdminPage() {
     setToken(null);
   }
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function compressImage(file: File, maxSize = 1000, quality = 0.75): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height && width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          } else if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("No se pudo procesar la imagen"));
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = () => reject(new Error("Imagen inválida"));
+        img.src = reader.result as string;
+      };
+      reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, image: reader.result as string }));
-    reader.readAsDataURL(file);
+    setMsg("Procesando imagen...");
+    try {
+      const compressed = await compressImage(file);
+      setForm((f) => ({ ...f, image: compressed }));
+      setMsg("");
+    } catch {
+      setMsg("No se pudo procesar la imagen. Intenta con otra foto.");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -91,7 +126,12 @@ export default function AdminPage() {
       setMsg(editingId ? "Producto actualizado." : "Producto agregado.");
       loadProducts();
     } else {
-      setMsg("Hubo un error. Intenta de nuevo.");
+      let detail = "";
+      try {
+        const data = await res.json();
+        detail = data.error || "";
+      } catch {}
+      setMsg(detail ? `Error: ${detail}` : `Hubo un error (código ${res.status}). Intenta de nuevo.`);
     }
   }
 

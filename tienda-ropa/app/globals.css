@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #faf6f1;
+  --ink: #2a2420;
+  --wine: #8b3a4a;
+  --wine-dark: #6f2d3a;
+  --gold: #b8925a;
+  --line: #e5ddd2;
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif-brand {
+  font-family: var(--font-serif), serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--wine);
+  outline-offset: 2px;
+}

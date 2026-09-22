@@ -17,36 +17,52 @@ export async function POST(req: NextRequest) {
   if (!checkAuth(req)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  const body = await req.json();
-  const products = await getProducts();
-  const newProduct: Product = {
-    id: crypto.randomUUID(),
-    name: body.name,
-    price: Number(body.price),
-    category: body.category,
-    image: body.image,
-    description: body.description || "",
-    available: body.available ?? true,
-    createdAt: Date.now(),
-  };
-  products.push(newProduct);
-  await saveProducts(products);
-  return NextResponse.json(newProduct);
+  try {
+    const body = await req.json();
+    const products = await getProducts();
+    const newProduct: Product = {
+      id: crypto.randomUUID(),
+      name: body.name,
+      price: Number(body.price),
+      category: body.category,
+      image: body.image,
+      description: body.description || "",
+      available: body.available ?? true,
+      createdAt: Date.now(),
+    };
+    products.push(newProduct);
+    await saveProducts(products);
+    return NextResponse.json(newProduct);
+  } catch (err) {
+    console.error("Error al crear producto:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Error desconocido" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function PUT(req: NextRequest) {
   if (!checkAuth(req)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  const body = await req.json();
-  const products = await getProducts();
-  const idx = products.findIndex((p) => p.id === body.id);
-  if (idx === -1) {
-    return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+  try {
+    const body = await req.json();
+    const products = await getProducts();
+    const idx = products.findIndex((p) => p.id === body.id);
+    if (idx === -1) {
+      return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+    }
+    products[idx] = { ...products[idx], ...body };
+    await saveProducts(products);
+    return NextResponse.json(products[idx]);
+  } catch (err) {
+    console.error("Error al actualizar producto:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Error desconocido" },
+      { status: 500 }
+    );
   }
-  products[idx] = { ...products[idx], ...body };
-  await saveProducts(products);
-  return NextResponse.json(products[idx]);
 }
 
 export async function DELETE(req: NextRequest) {

@@ -1,14 +1,12 @@
-
-Store · TS
 import { put, list, get } from "@vercel/blob";
 import fs from "fs/promises";
 import path from "path";
 import type { Product } from "./types";
- 
+
 const BLOB_KEY = "fashion-ale-products.json";
 const LOCAL_PATH = path.join(process.cwd(), "data", "products.json");
 const hasBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
- 
+
 async function readLocal(): Promise<Product[]> {
   try {
     const raw = await fs.readFile(LOCAL_PATH, "utf-8");
@@ -17,12 +15,12 @@ async function readLocal(): Promise<Product[]> {
     return [];
   }
 }
- 
+
 async function writeLocal(products: Product[]) {
   await fs.mkdir(path.dirname(LOCAL_PATH), { recursive: true });
   await fs.writeFile(LOCAL_PATH, JSON.stringify(products, null, 2));
 }
- 
+
 async function streamToString(stream: ReadableStream): Promise<string> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
@@ -34,7 +32,7 @@ async function streamToString(stream: ReadableStream): Promise<string> {
   }
   return result;
 }
- 
+
 export async function getProducts(): Promise<Product[]> {
   if (!hasBlob) return readLocal();
   try {
@@ -49,7 +47,7 @@ export async function getProducts(): Promise<Product[]> {
     return [];
   }
 }
- 
+
 export async function saveProducts(products: Product[]): Promise<void> {
   if (!hasBlob) {
     await writeLocal(products);
@@ -61,4 +59,3 @@ export async function saveProducts(products: Product[]): Promise<void> {
     allowOverwrite: true,
   });
 }
- 
